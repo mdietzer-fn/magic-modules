@@ -71,7 +71,7 @@ func TestAccSecurityCenterSourceIamBinding_withCondition(t *testing.T) {
 
 	vcrTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		Providers: testAccProvidersOiCS,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityCenterSourceIamBinding_basic_withCondition(context),
@@ -161,7 +161,7 @@ func TestAccSecurityCenterSourceIamMember_withCondition(t *testing.T) {
 
 	vcrTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		Providers: testAccProvidersOiCS,
 		Steps: []resource.TestStep{
 			{
 				// Test Iam Member creation (no update for member, no need to test)
@@ -233,18 +233,10 @@ func TestAccSecurityCenterSourceIamPolicy_withCondition(t *testing.T) {
 
 	vcrTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		Providers: testAccProvidersOiCS,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecurityCenterSourceIamPolicy_basic_withCondition(context),
-			},
-			{
-				ResourceName:      "google_scc_source_iam_policy.foo",
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccSecurityCenterSourceIamPolicy_emptyBinding_withCondition(context),
 			},
 			{
 				ResourceName:      "google_scc_source_iam_policy.foo",
@@ -354,12 +346,14 @@ resource "google_scc_source_iam_binding" "foo" {
 func testAccSecurityCenterSourceIamMember_basic_withCondition(context map[string]interface{}) string {
 	return Nprintf(`
 resource "google_scc_source" "custom_source" {
+  provider     = google-beta
   display_name = "tf-test-source%{random_suffix}"
   organization = "%{org_id}"
   description  = "My custom Cloud Security Command Center Finding Source"
 }
 
 resource "google_scc_source_iam_member" "foo" {
+  provider     = google-beta
   source       = google_scc_source.custom_source.id
   organization = "%{org_id}"
   role         = "%{role}"
@@ -377,53 +371,31 @@ resource "google_scc_source_iam_member" "foo" {
 func testAccSecurityCenterSourceIamPolicy_basic_withCondition(context map[string]interface{}) string {
 	return Nprintf(`
 resource "google_scc_source" "custom_source" {
+  provider     = google-beta
   display_name = "tf-test-source%{random_suffix}"
   organization = "%{org_id}"
   description  = "My custom Cloud Security Command Center Finding Source"
 }
 
 data "google_iam_policy" "foo" {
+  provider     = google-beta
   binding {
     role    = "%{role}"
     members = ["user:admin@hashicorptest.com"]
+
+    condition {
+      title       = "%{condition}"
+      description = "Expiring at midnight of 2019-12-31"
+      expression  = "request.time < timestamp(\"2020-01-01T00:00:00Z\")"
+    }
   }
 }
 
 resource "google_scc_source_iam_policy" "foo" {
+  provider     = google-beta
   source       = google_scc_source.custom_source.id
   organization = "%{org_id}"
   policy_data  = data.google_iam_policy.foo.policy_data
-
-  condition {
-    title       = "%{condition}"
-    description = "Expiring at midnight of 2019-12-31"
-    expression  = "request.time < timestamp(\"2020-01-01T00:00:00Z\")"
-  }
-}
-`, context)
-}
-
-func testAccSecurityCenterSourceIamPolicy_emptyBinding_withCondition(context map[string]interface{}) string {
-	return Nprintf(`
-resource "google_scc_source" "custom_source" {
-  display_name = "tf-test-source%{random_suffix}"
-  organization = "%{org_id}"
-  description  = "My custom Cloud Security Command Center Finding Source"
-}
-
-data "google_iam_policy" "foo" {
-}
-
-resource "google_scc_source_iam_policy" "foo" {
-  source       = google_scc_source.custom_source.id
-  organization = "%{org_id}"
-  policy_data  = data.google_iam_policy.foo.policy_data
-
-  condition {
-    title       = "%{condition}"
-    description = "Expiring at midnight of 2019-12-31"
-    expression  = "request.time < timestamp(\"2020-01-01T00:00:00Z\")"
-  }
 }
 `, context)
 }
@@ -431,12 +403,14 @@ resource "google_scc_source_iam_policy" "foo" {
 func testAccSecurityCenterSourceIamBinding_basic_withCondition(context map[string]interface{}) string {
 	return Nprintf(`
 resource "google_scc_source" "custom_source" {
+  provider     = google-beta
   display_name = "tf-test-source%{random_suffix}"
   organization = "%{org_id}"
   description  = "My custom Cloud Security Command Center Finding Source"
 }
 
 resource "google_scc_source_iam_binding" "foo" {
+  provider     = google-beta
   source       = google_scc_source.custom_source.id
   organization = "%{org_id}"
   role         = "%{role}"
@@ -454,12 +428,14 @@ resource "google_scc_source_iam_binding" "foo" {
 func testAccSecurityCenterSourceIamBinding_update_withCondition(context map[string]interface{}) string {
 	return Nprintf(`
 resource "google_scc_source" "custom_source" {
+  provider     = google-beta
   display_name = "tf-test-source%{random_suffix}"
   organization = "%{org_id}"
   description  = "My custom Cloud Security Command Center Finding Source"
 }
 
 resource "google_scc_source_iam_binding" "foo" {
+  provider     = google-beta
   source       = google_scc_source.custom_source.id
   organization = "%{org_id}"
   role         = "%{role}"
