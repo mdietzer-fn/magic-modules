@@ -8,21 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func makeConditionIfNeeded(context map[string]interface{}) string {
-	conditionTitle := context["condition"]
-	if conditionTitle == "" {
-		return ""
-	}
-
-	return Nprintf(`
-condition {
-	title       = "%{condition}"
-	description = "Expiring at midnight of 2019-12-31"
-	expression  = "request.time < timestamp(\"2020-01-01T00:00:00Z\")"
-}
-`, context)
-}
-
 func TestAccSecurityCenterSourceIamBinding(t *testing.T) {
 	t.Parallel()
 
@@ -151,10 +136,9 @@ func TestAccSecurityCenterSourceIamMember(t *testing.T) {
 				ImportStateIdFunc: func(state *terraform.State) (string, error) {
 					// This has to be a function because sources only use numeric IDs
 					id := state.RootModule().Resources["google_scc_source.custom_source"].Primary.Attributes["id"]
-					return fmt.Sprintf("%s %s user:admin@hashicorptest.com %s",
+					return fmt.Sprintf("%s %s user:admin@hashicorptest.com",
 						id,
 						context["role"],
-						context["condition"],
 					), nil
 				},
 				ImportState:       true,
@@ -172,6 +156,7 @@ func TestAccSecurityCenterSourceIamMember_withCondition(t *testing.T) {
 		"random_suffix": randString(t, 10),
 		"role":          "roles/securitycenter.sourcesViewer",
 		"org_id":        getTestOrgFromEnv(t),
+		"condition":     "expires_after_2019_12_31",
 	}
 
 	vcrTest(t, resource.TestCase{
@@ -243,6 +228,7 @@ func TestAccSecurityCenterSourceIamPolicy_withCondition(t *testing.T) {
 		"random_suffix": randString(t, 10),
 		"role":          "roles/securitycenter.sourcesViewer",
 		"org_id":        getTestOrgFromEnv(t),
+		"condition":     "expires_after_2019_12_31",
 	}
 
 	vcrTest(t, resource.TestCase{
