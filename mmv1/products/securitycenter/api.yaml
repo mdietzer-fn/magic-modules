@@ -44,7 +44,6 @@ objects:
       method_name_separator: ':'
       fetch_iam_policy_verb: :POST
       parent_resource_attribute: 'source'
-      iam_conditions_request_type: :REQUEST_BODY
       base_url: organizations/{{organization}}/sources/{{source}}
       import_format: ["organizations/{{organization}}/sources/{{source}}", "{{source}}"]
     parameters:
